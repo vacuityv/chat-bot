@@ -1,0 +1,56 @@
+server:
+  servlet:
+    context-path: /chat-bot
+  port: 8087
+  max-http-header-size: 2MB
+    
+spring:
+  servlet:
+    multipart:
+      max-file-size: 512MB
+      max-request-size: 512MB
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    #    password: pw2021
+    database: 0
+    lettuce:
+      pool:
+        max-idle: 16
+        max-active: 32
+        min-idle: 8
+  jackson:
+    generator:
+      write-numbers-as-strings: true
+#nacos:
+#  config:
+#    bootstrap:
+#      enable: true
+#      log-enable: true
+#    server-addr: 127.0.0.1:8848
+#    data-id: bot-local.yml
+#    type: yaml
+#    auto-refresh: true
+logging:
+  level:
+    _org.springframework: INFO
+    org.springframework: INFO
+    io.lettuce: INFO
+    io.netty: INFO
+    com.mailgun.util.ConsoleLogger: INFO
+    
+vac:
+  ge:
+    host: http://127.0.0.1:2531/v2/api
+    downloadHost: http://127.0.0.1:2532/download/
+  bot:
+    openaiKey: sk-*****
+    claudeKey: sk-*****
+    deepseekKey: sk-*****
+    grokKey: xai-*****
+    hgtPath: /Users/*****/stories.json
+  google:
+    searchKey: 1*****
+    searchCx: 2*****
+  together:
+    key: 1*****
