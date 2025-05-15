@@ -54,3 +54,10 @@ vac:
     searchCx: 2*****
   together:
     key: 1*****
+  prompt:
+    meng: '测试'
+    zixuan: '测试'
+    dan: '测试'
+    solo: '测试'
+    group: '测试'
+  help: 'ss'
