@@ -61,6 +61,8 @@ public class BotService {
     private SvgService svgService;
     @Autowired
     private HaiguitangService haiguitangService;
+    @Autowired
+    private PromptService promptService;
 
     @Value("${vac.ge.host:http://127.0.0.1:2531/v2/api}")
     private String geHost;
@@ -180,7 +182,7 @@ public class BotService {
                 messageMap.remove(fromUserName);
                 req.put("content", "历史记录已清空");
             } else if (receiveMsg.equals("/help")) {
-                req.put("content", BotConstant.HELP);
+                req.put("content", promptService.getHelp());
             } else if (receiveMsg.startsWith("/svg")) {
                 processSvg(receiveMsg, req);
                 return;
@@ -403,7 +405,7 @@ public class BotService {
     }
 
     private String getGroupPrompt(String key) {
-        String prompt = BotConstant.PROMPT;
+        String prompt = promptService.getGroupPrompt();
         
         if (redisUtil.hasKey(BotConstant.ROLE_CACHE + key)) {
             String role = (String) redisUtil.get(BotConstant.ROLE_CACHE + key);
@@ -412,11 +414,11 @@ public class BotService {
                     prompt = (String) redisUtil.get(BotConstant.PROMPT_CACHE + key);
                 }
             } else {
-                prompt = BotConstant.ROLE_MAP.get(role);
+                prompt = promptService.getPrompt(role);
             }
         }
         if (StringUtils.isEmpty(prompt)) {
-            prompt = BotConstant.PROMPT;
+            prompt = promptService.getGroupPrompt();
         }
         return getDateStr() + prompt;
     }
@@ -430,11 +432,11 @@ public class BotService {
                     prompt = (String) redisUtil.get(BotConstant.PROMPT_CACHE + key);
                 }
             } else {
-                prompt = BotConstant.ROLE_MAP.get(role);
+                prompt = promptService.getPrompt(role);
             }
         }
         if (StringUtils.isEmpty(prompt)) {
-            prompt = BotConstant.SOLO_PROMPT;
+            prompt = promptService.getSoloPrompt();
         }
         return getDateStr() + prompt;
     }
