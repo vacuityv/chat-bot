@@ -374,6 +374,13 @@ public class BotService {
         redisUtil.set(key, appId);
     }
 
+    public void removeAppId() {
+        String key = "GE_APPID";
+        if (redisUtil.hasKey(key)) {
+            redisUtil.delete(key);
+        }
+    }
+
 
     public String getUuid() {
         String key = "GE_UUID";
@@ -383,6 +390,16 @@ public class BotService {
     public void setUuid(String uuid) {
         String key = "GE_UUID";
         redisUtil.set(key, uuid);
+    }
+
+    public String getLoginQr() {
+        String key = "GE_LOGIN_QR";
+        return (String) redisUtil.get(key);
+    }
+
+    public void setLoginQr(String loginQr) {
+        String key = "GE_LOGIN_QR";
+        redisUtil.set(key, loginQr, 10 * 60);
     }
 
     public void setWxid(String wxid) {

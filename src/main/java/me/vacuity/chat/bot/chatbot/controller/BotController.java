@@ -37,26 +37,50 @@ public class BotController {
     @Autowired
     private BotService botService;
 
-    @Value("${vac.ge.vac:123456}")
-    private String vac;
+    @Value("${vac.bot.vacToken:123456}")
+    private String vacToken;
     @Value("${vac.ge.host:123456}")
     private String geHost;
+
+
+    @Value(value = "${vac.ge.token: 123}")
+    private String token;
+
+    @Value(value = "${vac.ge.regionId: 350000}")
+    private String regionId;
+    @Value(value = "${vac.ge.useProxy: true}")
+    private boolean useProxy;
+    @Value(value = "${vac.ge.proxy.type: socks5}")
+    private String proxyType;
+    @Value(value = "${vac.ge.proxy.username: socks5}")
+    private String proxyUsername;
+    @Value(value = "${vac.ge.proxy.password: socks5}")
+    private String proxyPassword;
+    @Value(value = "${vac.ge.proxy.host: socks5}")
+    private String proxyHost;
+    @Value(value = "${vac.ge.proxy.port: socks5}")
+    private String proxyPort;
+
+    @Value(value = "${vac.ge.callbackUrl: 111}")
+    private String callbackUrl;
 
 
     @RequestMapping("/getQr")
     @ResponseBody
     public VacRes getQr(HttpServletRequest request) {
         String token = request.getHeader("vac-token");
-        if (!StringUtils.equals(token, "20241205")) {
+        if (!StringUtils.equals(token, vacToken)) {
             return VacRes.fail("no");
         }
-        String geToken = botService.getToken();
         String appId = botService.getAppId();
         JSONObject data = new JSONObject();
         data.put("appId", appId);
-        
+        data.put("regionId", regionId);
+        data.put("type", "ipad");
+        processProxyInfo(data);
+
         String res = HttpRequest.post(geHost + "/login/getLoginQrCode")
-                .header("X-GEWE-TOKEN", geToken)
+                .header("X-GEWE-TOKEN", token)
                 .body(data.toJSONString())
                 .execute().body();
         JSONObject resObj = JSON.parseObject(res);
@@ -65,6 +89,7 @@ public class BotController {
             appId = resData.getString("appId");
             botService.setAppId(appId);
             botService.setUuid(resData.getString("uuid"));
+            botService.setLoginQr(resData.getString("qrData"));
             return VacRes.success(resData);
         } else {
             return VacRes.fail(resObj.getString("msg"));
@@ -75,11 +100,11 @@ public class BotController {
     @ResponseBody
     public VacRes checkLogin(HttpServletRequest request, @RequestBody JSONObject req) {
         String token = request.getHeader("vac-token");
-        if (!StringUtils.equals(token, "20241205")) {
+        if (!StringUtils.equals(token, vacToken)) {
             return VacRes.fail("no");
         }
-        
-        return VacRes.success(checkLogin(req.getString("captchCode")));
+
+        return VacRes.success(checkLogin());
     }
 
     @RequestMapping("/callback")
@@ -102,32 +127,42 @@ public class BotController {
     @ResponseBody
     public VacRes sendCallbackUrl(HttpServletRequest request) {
         String token = request.getHeader("vac-token");
-        if (!StringUtils.equals(token, "20241205")) {
+        if (!StringUtils.equals(token, vacToken)) {
             return VacRes.fail("no");
         }
-        String geToken = botService.getToken();
         JSONObject data = new JSONObject();
-        data.put("token", geToken);
-        data.put("callbackUrl", "https://aipolish.online/vac-tool-api/bot/callback");
+        data.put("token", token);
+        data.put("callbackUrl", callbackUrl);
 
         String res = HttpRequest.post(geHost + "/tools/setCallback")
-                .header("X-GEWE-TOKEN", geToken)
+                .header("X-GEWE-TOKEN", token)
                 .body(data.toJSONString())
                 .execute().body();
         JSONObject resObj = JSON.parseObject(res);
         return VacRes.success(resObj);
     }
-    
-    private JSONObject checkLogin(String captchCode) {
-        String geToken = botService.getToken();
+
+    @RequestMapping("/removeAppid")
+    @ResponseBody
+    public VacRes removeAppid(HttpServletRequest request) {
+        String token = request.getHeader("vac-token");
+        if (!StringUtils.equals(token, vacToken)) {
+            return VacRes.fail("no");
+        }
+        botService.removeAppId();
+        return VacRes.success(null);
+    }
+
+    private JSONObject checkLogin() {
         String appId = botService.getAppId();
         JSONObject data = new JSONObject();
         data.put("appId", appId);
         data.put("uuid", botService.getUuid());
-        data.put("captchCode", captchCode);
+        data.put("captchCode", botService.getLoginQr());
+        processProxyInfo(data);
 
         String res = HttpRequest.post(geHost + "/login/checkLogin")
-                .header("X-GEWE-TOKEN", geToken)
+                .header("X-GEWE-TOKEN", token)
                 .body(data.toJSONString())
                 .execute().body();
         log.info("checkLogin: {}", res);
@@ -143,6 +178,13 @@ public class BotController {
             }
         }
         return resObj;
+    }
+
+    private void processProxyInfo(JSONObject data) {
+        if (useProxy) {
+            String proxyInfo = proxyType+ "://" + proxyUsername + ":" + proxyPassword + "@" + proxyHost + ":" + proxyPort;
+            data.put("proxyIp", proxyInfo);
+        }
     }
 
     
