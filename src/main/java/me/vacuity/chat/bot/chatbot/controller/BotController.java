@@ -126,8 +126,8 @@ public class BotController {
     @RequestMapping("/sendCallbackUrl")
     @ResponseBody
     public VacRes sendCallbackUrl(HttpServletRequest request) {
-        String token = request.getHeader("vac-token");
-        if (!StringUtils.equals(token, vacToken)) {
+        String checkToken = request.getHeader("vac-token");
+        if (!StringUtils.equals(checkToken, vacToken)) {
             return VacRes.fail("no");
         }
         JSONObject data = new JSONObject();

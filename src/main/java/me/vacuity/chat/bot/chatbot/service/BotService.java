@@ -66,9 +66,8 @@ public class BotService {
 
     @Value("${vac.ge.host:http://127.0.0.1:2531/v2/api}")
     private String geHost;
-
-    @Value("${vac.ge.downloadHost:http://127.0.0.1:2532/download}")
-    private String geDownloadHost;
+    @Value(value = "${vac.ge.token: 123}")
+    private String token;
 
 
     private final RateLimiter rateLimiter = new RateLimiter();
@@ -342,24 +341,6 @@ public class BotService {
         }
     }
 
-
-    public String getToken() {
-        String key = "GE_TOKEN";
-        if (redisUtil.hasKey(key)) {
-            return (String) redisUtil.get(key);
-        } else {
-            String res = HttpUtil.post(geHost + "/tools/getTokenId", new JSONObject());
-            JSONObject resObj = JSON.parseObject(res);
-            if (resObj.getInteger("ret") == 200) {
-                String token = resObj.getString("data");
-                redisUtil.set(key, token, 7 * 24 * 60 * 60);
-                return token;
-            } else {
-                throw new VacException("get token error");
-            }
-        }
-    }
-
     public String getAppId() {
         String key = "GE_APPID";
         if (redisUtil.hasKey(key)) {
@@ -409,7 +390,7 @@ public class BotService {
 
     public JSONObject postToGewe(String url, JSONObject data) {
         String res = HttpRequest.post(geHost + url)
-                .header("X-GEWE-TOKEN", getToken())
+                .header("X-GEWE-TOKEN", token)
                 .body(data.toJSONString())
                 .execute().body();
         JSONObject resObj = JSON.parseObject(res);
@@ -608,7 +589,7 @@ public class BotService {
             req.put("type", 1);
             fileUrl = postToGewe("/message/downloadImage", req).getString("fileUrl");
         }
-        String imgUrl = geDownloadHost + fileUrl;
+        String imgUrl = geHost + fileUrl;
         log.error("imgUrl: {}", imgUrl);
         MessageImg img = ImageDownloader.download(imgUrl);
         return img;
