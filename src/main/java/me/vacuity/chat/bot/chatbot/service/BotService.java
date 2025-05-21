@@ -589,7 +589,11 @@ public class BotService {
             req.put("type", 1);
             fileUrl = postToGewe("/message/downloadImage", req).getString("fileUrl");
         }
-        String imgUrl = geHost + fileUrl;
+        String imgUrl = fileUrl;
+        if (!imgUrl.startsWith("http")) {
+            imgUrl = geHost + imgUrl;
+        }
+        
         log.error("imgUrl: {}", imgUrl);
         MessageImg img = ImageDownloader.download(imgUrl);
         return img;
